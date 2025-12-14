@@ -1,5 +1,23 @@
-# Prerequisites
-*.d
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# Conan
+CMakeUserPresets.json
+graph_info.json
+conanbuildinfo.*
+conaninfo.txt
+conan.lock
+.conan2/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.cache/
 
 # Compiled Object files
 *.slo
@@ -22,10 +40,6 @@
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
 *.lai
 *.la
@@ -37,5 +51,26 @@
 *.out
 *.app
 
-# debug information files
+# Debug information files
 *.dwo
+*.d
+
+# Coverage
+*.gcov
+*.gcda
+*.gcno
+coverage/
+lcov.info
+
+# DevContainer cache (keep directory structure)
+.devcontainer/conan-cache/*
+!.devcontainer/conan-cache/.gitkeep
+
+# CLion shared run configurations (keep tracked)
+!.run/
+
+# macOS
+.DS_Store
+
+# Testing artifacts
+Testing/

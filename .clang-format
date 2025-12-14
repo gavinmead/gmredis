@@ -1,0 +1,80 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+Standard: c++23
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+IndentCaseLabels: true
+IndentPPDirectives: BeforeHash
+NamespaceIndentation: None
+
+# Alignment
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments: true
+
+# Braces
+BreakBeforeBraces: Attach
+Cpp11BracedListStyle: true
+
+# Line breaks
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackArguments: true
+BinPackParameters: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+
+# Column limit
+ColumnLimit: 100
+
+# Include sorting
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Project headers
+  - Regex: '^"gmredis/'
+    Priority: 1
+  # Other project headers
+  - Regex: '^"'
+    Priority: 2
+  # System/library headers
+  - Regex: '^<'
+    Priority: 3
+
+# Spaces
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Pointer alignment
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# Other
+AccessModifierOffset: -4
+FixNamespaceComments: true
+SortIncludes: true
+SortUsingDeclarations: true
+ReflowComments: true
+...
