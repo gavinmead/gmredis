@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   build-and-test:
     runs-on: ubuntu-24.04
@@ -26,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build python3-pip
+          sudo apt-get install -y ninja-build python3-pip python3-venv
 
       - name: Install GCC 14
         if: matrix.compiler == 'gcc-14'
@@ -34,34 +31,26 @@ jobs:
           sudo apt-get install -y gcc-14 g++-14
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 100
 
       - name: Install Clang 18
         if: matrix.compiler == 'clang-18'
         run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 18
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
 
       - name: Install Conan
         run: |
+          python3 -m pip install --upgrade pip
           pip install conan
-          conan profile detect --force
 
-      - name: Configure Conan profile for GCC
-        if: matrix.compiler == 'gcc-14'
+      - name: Configure Conan profile
         run: |
           conan profile detect --force
-          sed -i 's/compiler=.*/compiler=gcc/' ~/.conan2/profiles/default
-          sed -i 's/compiler.version=.*/compiler.version=14/' ~/.conan2/profiles/default
-
-      - name: Configure Conan profile for Clang
-        if: matrix.compiler == 'clang-18'
-        run: |
-          conan profile detect --force
-          sed -i 's/compiler=.*/compiler=clang/' ~/.conan2/profiles/default
-          sed -i 's/compiler.version=.*/compiler.version=18/' ~/.conan2/profiles/default
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -79,26 +68,30 @@ jobs:
       - name: Configure CMake (GCC)
         if: matrix.compiler == 'gcc-14'
         run: |
-          cmake --preset conan-release -B build \
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
             -DCMAKE_C_COMPILER=gcc-14 \
             -DCMAKE_CXX_COMPILER=g++-14 \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -G Ninja
 
       - name: Configure CMake (Clang)
         if: matrix.compiler == 'clang-18'
         run: |
-          cmake --preset conan-release -B build \
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
             -DCMAKE_C_COMPILER=clang-18 \
             -DCMAKE_CXX_COMPILER=clang++-18 \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -G Ninja
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }}
+        run: cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
 
       - name: Run unit tests
         working-directory: build
-        run: ctest -C ${{ matrix.build_type }} --output-on-failure -R unit
+        run: ctest -C ${{ matrix.build_type }} --output-on-failure -L unit
 
       - name: Run acceptance tests
         working-directory: build
-        run: ctest -C ${{ matrix.build_type }} --output-on-failure -R acceptance
+        run: ctest -C ${{ matrix.build_type }} --output-on-failure -L acceptance
