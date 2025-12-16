@@ -43,12 +43,12 @@ test: build
 	cd $(BUILD_DIR) && ctest -C $(BUILD_TYPE) --output-on-failure
 
 # Run unit tests only
-test-unit: build
+ut: build
 	@echo "==> Running unit tests..."
 	cd $(BUILD_DIR) && ctest -C $(BUILD_TYPE) --output-on-failure -L unit
 
 # Run acceptance tests only
-test-acceptance: build
+uat: build
 	@echo "==> Running acceptance tests..."
 	cd $(BUILD_DIR) && ctest -C $(BUILD_TYPE) --output-on-failure -L acceptance
 
@@ -121,8 +121,8 @@ help:
 	@echo "  debug           Build with Debug configuration"
 	@echo "  release         Build with Release configuration"
 	@echo "  test            Run all tests"
-	@echo "  test-unit       Run unit tests only"
-	@echo "  test-acceptance Run acceptance tests only"
+	@echo "  ut       	     Run unit tests only"
+	@echo "  uat Run acceptance tests only"
 	@echo "  clean           Remove build directory"
 	@echo "  rebuild         Clean and rebuild"
 	@echo "  format          Format source code with clang-format"

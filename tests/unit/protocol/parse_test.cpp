@@ -102,4 +102,56 @@ namespace gmredis::test {
         EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
         EXPECT_EQ(input, "");
     }
+
+    TEST(ParseTest, BulkStringOk) {
+        std::string_view input = "$5\r\nhello\r\n";
+        auto result = protocol::parse(input);
+        EXPECT_TRUE(result.has_value());
+
+        auto bulk_string = std::get<protocol::BulkString>(result.value());
+        EXPECT_EQ(bulk_string.value, "hello");
+        EXPECT_EQ(bulk_string.length, 5);
+    }
+
+    TEST(ParseTest, BulkStringEmpty) {
+        std::string_view input = "$0\r\n\r\n";
+
+        auto result = protocol::parse(input);
+        EXPECT_TRUE(result.has_value());
+
+        auto bulk_string = std::get<protocol::BulkString>(result.value());
+        EXPECT_EQ(bulk_string.value, "");
+        EXPECT_EQ(bulk_string.length, 0);
+    }
+
+    TEST(ParseTest, BulkStringEmptyStringInput) {
+        std::string_view input = "";
+        auto result = protocol::parse(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
+    }
+
+    TEST(ParseTest, BulkStringInvalid) {
+        std::string_view input = "}0\r\n\r\n";
+        auto result = protocol::parse_bulk_string(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Invalid);
+        EXPECT_EQ(input, "}0\r\n\r\n");
+    }
+
+    TEST(ParseTest, BulkStringEscapedString) {
+        std::string_view input = "$7\r\nhel\r\nlo\r\n";
+        auto result = protocol::parse_bulk_string(input);
+        EXPECT_TRUE(result.has_value());
+        auto bulk_string = std::get<protocol::BulkString>(result.value());
+        EXPECT_EQ(bulk_string.value, "hel\r\nlo");
+    }
+
+    TEST(ParseTest, BulkStringEscapedIncomplete) {
+        std::string_view input = "$7\r\nhel\r\nlo";
+        auto result = protocol::parse_bulk_string(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
+        EXPECT_EQ(input, "$7\r\nhel\r\nlo");
+    }
 }
