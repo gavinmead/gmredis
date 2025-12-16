@@ -2,6 +2,7 @@ add_executable(gmredis_unit_tests
     version_test.cpp
     storage/kv_mem_test.cpp
     storage/kv_threaded_test.cpp
+    protocol/serialize_test.cpp
 )
 
 target_link_libraries(gmredis_unit_tests
