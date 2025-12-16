@@ -23,4 +23,9 @@ namespace gmredis::test {
         auto serialized = protocol::serialize(resp_value);
         EXPECT_EQ(serialized, "+Hello, RespValue!\r\n");
     }
+    TEST(SerializeTest, BulkStringSerialization) {
+        protocol::BulkString const bulk_string{.value="Hello, World!", .length=13};
+        auto serialized = protocol::serialize(bulk_string);
+        EXPECT_EQ(serialized, "$13\r\nHello, World!\r\n");
+    }
 }

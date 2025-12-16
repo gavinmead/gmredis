@@ -1,4 +1,5 @@
 #include "gmredis/protocol/serialize.h"
+#include <fmt/core.h>
 
 namespace gmredis::protocol {
     std::string serialize(const SimpleString& resp) {
@@ -10,7 +11,7 @@ namespace gmredis::protocol {
     }
 
     std::string serialize(const BulkString& resp) {
-        return "not-implemented-" + resp.value + "\r\n";
+        return fmt::format("${}\r\n{}\r\n", resp.length, resp.value);
     }
 
     std::string serialize(const RespValue& resp) {
