@@ -22,6 +22,13 @@ endif()
 option(GMREDIS_BUILD_TESTS "Build tests" ON)
 option(GMREDIS_BUILD_SERVER "Build Redis server" ON)
 option(GMREDIS_BUILD_CLIENT "Build Redis client" ON)
+option(GMREDIS_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+
+# Sanitizers
+if(GMREDIS_ENABLE_TSAN)
+    add_compile_options(-fsanitize=thread)
+    add_link_options(-fsanitize=thread)
+endif()
 
 # Compiler warnings
 add_library(gmredis_warnings INTERFACE)
@@ -43,6 +50,7 @@ target_compile_options(gmredis_warnings INTERFACE
 find_package(GTest REQUIRED)
 find_package(Catch2 REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(Threads REQUIRED)
 
 # Core library
 add_subdirectory(lib/gmredis)
