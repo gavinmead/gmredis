@@ -1,6 +1,7 @@
 add_library(gmredis_lib
         src/version.cpp
         src/storage/kv_mem.cpp
+        src/storage/kv_threading.cpp
 )
 
 add_library(gmredis::lib ALIAS gmredis_lib)
@@ -16,6 +17,7 @@ target_link_libraries(gmredis_lib
         gmredis_warnings
     PUBLIC
         spdlog::spdlog
+        Threads::Threads
 )
 
 # Set library properties
