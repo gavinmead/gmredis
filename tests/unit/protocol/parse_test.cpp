@@ -154,4 +154,58 @@ namespace gmredis::test {
         EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
         EXPECT_EQ(input, "$7\r\nhel\r\nlo");
     }
+
+    TEST(ParseTest, PositiveIntegerOK) {
+        std::string_view input = ":123\r\n";
+        auto result = protocol::parse_integer(input);
+        EXPECT_TRUE(result.has_value());
+        EXPECT_EQ(std::get<protocol::Integer>(result.value()).value, 123);
+        EXPECT_EQ(input, "");
+    }
+
+    TEST(ParseTest, ExplicitPositiveIntegerOK) {
+        std::string_view input = ":+123\r\n";
+        auto result = protocol::parse_integer(input);
+        EXPECT_TRUE(result.has_value());
+        EXPECT_EQ(std::get<protocol::Integer>(result.value()).value, 123);
+        EXPECT_EQ(input, "");
+    }
+
+    TEST(ParseTest, NegativeIntegerOK) {
+        std::string_view input = ":-123\r\n";
+        auto result = protocol::parse_integer(input);
+        EXPECT_TRUE(result.has_value());
+        EXPECT_EQ(std::get<protocol::Integer>(result.value()).value, -123);
+        EXPECT_EQ(input, "");
+    }
+
+    TEST(ParseTest, IncompleteInteger) {
+        std::string_view input = ":-123";
+        auto result = protocol::parse_integer(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
+        EXPECT_EQ(input, ":-123");
+    }
+
+    TEST(ParseTest, InvalidPrefixInteger) {
+        std::string_view input = "}-123";
+        auto result = protocol::parse_integer(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Invalid);
+        EXPECT_EQ(input, "}-123");
+    }
+
+    TEST(ParseTest, MixedIntgerText) {
+        std::string_view input = ":123abc\r\n";
+        auto result = protocol::parse_integer(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Invalid);
+    }
+
+    TEST(ParseTest, InvalidInteger) {
+        std::string_view input = ":abc\r\n";
+        auto result = protocol::parse_integer(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Invalid);
+    }
 }
