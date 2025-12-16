@@ -42,6 +42,7 @@ target_compile_options(gmredis_warnings INTERFACE
 # Conan package manager integration
 find_package(GTest REQUIRED)
 find_package(Catch2 REQUIRED)
+find_package(spdlog REQUIRED)
 
 # Core library
 add_subdirectory(lib/gmredis)

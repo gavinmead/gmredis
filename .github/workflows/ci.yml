@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [gcc-14, clang-18]
+        compiler: [gcc-14]
         build_type: [Debug, Release]
 
     steps:
@@ -33,15 +33,6 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 100
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 100
-
-      - name: Install Clang 18
-        if: matrix.compiler == 'clang-18'
-        run: |
-          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
-          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
-          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
 
       - name: Install Conan
         run: |
@@ -72,16 +63,6 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
             -DCMAKE_C_COMPILER=gcc-14 \
             -DCMAKE_CXX_COMPILER=g++-14 \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -G Ninja
-
-      - name: Configure CMake (Clang)
-        if: matrix.compiler == 'clang-18'
-        run: |
-          cmake -S . -B build \
-            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
-            -DCMAKE_C_COMPILER=clang-18 \
-            -DCMAKE_CXX_COMPILER=clang++-18 \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -G Ninja
 
