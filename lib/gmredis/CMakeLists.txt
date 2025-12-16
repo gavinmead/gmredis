@@ -2,6 +2,7 @@ add_library(gmredis_lib
         src/version.cpp
         src/storage/kv_mem.cpp
         src/storage/kv_threading.cpp
+        src/protocol/serialize.cpp
 )
 
 add_library(gmredis::lib ALIAS gmredis_lib)
