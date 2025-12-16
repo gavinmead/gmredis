@@ -1,5 +1,6 @@
 add_library(gmredis_lib
         src/version.cpp
+        src/storage/kv_mem.cpp
 )
 
 add_library(gmredis::lib ALIAS gmredis_lib)
@@ -13,6 +14,8 @@ target_include_directories(gmredis_lib
 target_link_libraries(gmredis_lib
     PRIVATE
         gmredis_warnings
+    PUBLIC
+        spdlog::spdlog
 )
 
 # Set library properties

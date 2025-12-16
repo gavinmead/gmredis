@@ -16,6 +16,7 @@ class GmredisRecipe(ConanFile):
     def requirements(self):
         self.requires("gtest/1.15.0")
         self.requires("catch2/3.7.1")
+        self.requires("spdlog/1.15.0")
 
     def generate(self):
         deps = CMakeDeps(self)
