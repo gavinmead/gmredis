@@ -15,10 +15,13 @@ TEST_CASE("make_parser_table registers parsers correctly", "[parser]") {
         REQUIRE(table['-'] != nullptr);
     }
 
+    SECTION("Bulk parser is registered at '$'") {
+        REQUIRE(table['$'] != nullptr);
+    }
+
     SECTION("Unregistered prefixes return nullptr") {
         REQUIRE(table['*'] == nullptr);
         REQUIRE(table[':'] == nullptr);
-        REQUIRE(table['$'] == nullptr);
     }
 }
 

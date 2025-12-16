@@ -9,6 +9,10 @@ namespace gmredis::protocol {
         return "-" + resp.value + "\r\n";
     }
 
+    std::string serialize(const BulkString& resp) {
+        return "not-implemented-" + resp.value + "\r\n";
+    }
+
     std::string serialize(const RespValue& resp) {
         return std::visit([](const auto& value) {
             return serialize(value);

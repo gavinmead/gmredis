@@ -10,7 +10,13 @@ namespace gmredis::protocol {
     struct SimpleError {
         std::string value;
     };
+    struct BulkString {
+        std::string value;
+        size_t length;
+    };
 
-    using RespValue = std::variant<SimpleString, SimpleError>;
+    using RespValue = std::variant<SimpleString,
+                                   SimpleError,
+                                   BulkString>;
 
 }
