@@ -14,9 +14,13 @@ namespace gmredis::protocol {
         std::string value;
         size_t length;
     };
+    struct Integer {
+        int64_t value;
+    };
 
     using RespValue = std::variant<SimpleString,
                                    SimpleError,
-                                   BulkString>;
+                                   BulkString,
+                                   Integer>;
 
 }

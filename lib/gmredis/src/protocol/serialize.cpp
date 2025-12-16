@@ -14,6 +14,10 @@ namespace gmredis::protocol {
         return fmt::format("${}\r\n{}\r\n", resp.length, resp.value);
     }
 
+    std::string serialize(const Integer& resp) {
+        return fmt::format(":{}\r\n", resp.value);
+    }
+
     std::string serialize(const RespValue& resp) {
         return std::visit([](const auto& value) {
             return serialize(value);

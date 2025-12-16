@@ -63,7 +63,7 @@ namespace gmredis::protocol {
         auto next = crlf + 2;
 
         auto const length_str {input.substr(1, crlf - 1)};
-        //This should be parsable to a int
+
         size_t length = 0;
         auto [ptr, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length);
 
@@ -81,6 +81,38 @@ namespace gmredis::protocol {
         input.remove_prefix(crlf + 2);
 
         return BulkString{.value=value, .length=length};
+    }
+
+    std::expected<RespValue, ParseError> parse_integer(std::string_view &input) {
+        if (input.empty()) {
+            return std::unexpected{ParseError::Incomplete};
+        }
+
+        if (!input.starts_with(":")) {
+            return std::unexpected{ParseError::Invalid};
+        }
+
+        auto crlf = input.find("\r\n");
+        if (crlf == std::string_view::npos) {
+            return std::unexpected{ParseError::Incomplete};
+        }
+
+        int i_value = 0;
+
+        size_t start = (input[1] == '+') ? 2 : 1;
+        auto [ptr, ec] = std::from_chars(input.data() + start, input.data() + crlf, i_value);
+
+        if (ec != std::errc()) {
+            return std::unexpected{ParseError::Invalid};
+        }
+
+        if (ptr != input.data() + crlf) {
+            return std::unexpected{ParseError::Invalid};
+        }
+
+        input.remove_prefix(crlf + 2);
+
+        return Integer{i_value};
     }
 
     std::expected<RespValue, ParseError> parse(std::string_view& input) {
