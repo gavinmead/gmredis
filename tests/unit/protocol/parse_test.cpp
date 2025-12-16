@@ -79,4 +79,27 @@ namespace gmredis::test {
         EXPECT_EQ(input, "+OK\r\n");
     }
 
+    TEST(ParseTest, ParseFunctionOk) {
+        std::string_view input = "+Hello, Parse!\r\n";
+        auto result = protocol::parse(input);
+        EXPECT_TRUE(result.has_value());
+        EXPECT_EQ(std::get<protocol::SimpleString>(result.value()).value, "Hello, Parse!");
+        EXPECT_EQ(input, "");
+    }
+
+    TEST(ParseTest, ParseFunctionUnsupported) {
+        std::string_view input = "}1000\r\n"; // } is not supported
+        auto result = protocol::parse(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Unsupported);
+        EXPECT_EQ(input, "}1000\r\n");
+    }
+
+    TEST(ParseTest, ParseFunctionEmpty) {
+        std::string_view input = "";
+        auto result = protocol::parse(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
+        EXPECT_EQ(input, "");
+    }
 }

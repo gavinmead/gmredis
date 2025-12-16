@@ -40,4 +40,19 @@ namespace gmredis::protocol {
         input.remove_prefix(crlf + 2);
         return SimpleError{value};
     }
+
+    std::expected<RespValue, ParseError> parse(std::string_view& input) {
+        if (input.empty()) {
+            return std::unexpected{ParseError::Incomplete};
+        }
+
+        // Get the first character to determine the type
+        char const prefix = input.front();
+        auto const parser = parser_table[static_cast<unsigned char>(prefix)];
+        if (parser == nullptr) {
+            return std::unexpected{ParseError::Unsupported};
+        }
+
+        return parser(input);
+    }
 }
