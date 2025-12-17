@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "gmredis/protocol/parse.h"
+#include <vector>
 
 namespace gmredis::test {
     TEST(ParseTest, SimpleStringParse) {
@@ -208,4 +209,84 @@ namespace gmredis::test {
         EXPECT_FALSE(result.has_value());
         EXPECT_EQ(result.error(), protocol::ParseError::Invalid);
     }
+
+    TEST(ParseTest, ArraySingleType) {
+        std::string_view input = "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n";
+        auto result = protocol::parse_array(input);
+        EXPECT_TRUE(result.has_value());
+
+        std::vector<protocol::RespValue> const expected_results = {protocol::BulkString{.value = "hello", .length = 5},
+                                                    protocol::BulkString{.value = "world", .length = 5}};
+
+        auto array_results = std::get<protocol::Array>(result.value());
+
+        EXPECT_EQ(array_results.values, expected_results);
+
+        EXPECT_EQ(input, "");
+    }
+
+    TEST(ParseTest, ArrayMultiType) {
+        std::string_view input = "*4\r\n$5\r\nhello\r\n:123\r\n$5\r\nworld\r\n:-321\r\n";
+
+        auto result = protocol::parse_array(input);
+        EXPECT_TRUE(result.has_value());
+
+        std::vector<protocol::RespValue> const expected_results = {protocol::BulkString{.value = "hello", .length = 5},
+                                                    protocol::Integer{.value = 123},
+                                                    protocol::BulkString{.value = "world", .length = 5},
+                                                    protocol::Integer{.value = -321}};
+
+        auto array_results = std::get<protocol::Array>(result.value());
+
+        EXPECT_EQ(array_results.values, expected_results);
+
+        EXPECT_EQ(input, "");
+    }
+
+    TEST(ParseTest, ArrayEmptyString) {
+        std::string_view input = "";
+        auto result = protocol::parse_array(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
+    }
+
+    TEST(ParseTest, ArrayInvalid) {
+        std::string_view input = "}4\r\n$5\r\nhello\r\n$5\r\nworld\r\n";
+        auto result = protocol::parse_array(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Invalid);
+        EXPECT_EQ(input, "}4\r\n$5\r\nhello\r\n$5\r\nworld\r\n");
+    }
+
+    TEST(ParseTest, ArrayDeclaredLengthGreaterThanElements) {
+        // Declares 3 elements but only provides 2
+        std::string_view input = "*3\r\n$5\r\nhello\r\n$5\r\nworld\r\n";
+        auto result = protocol::parse_array(input);
+        EXPECT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), protocol::ParseError::Incomplete);
+    }
+
+    TEST(ParseTest, ArrayDeclaredLengthLessThanElements) {
+        // Declares 2 elements but input has more data after
+        std::string_view input = "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n$5\r\nextra\r\n";
+        auto result = protocol::parse_array(input);
+        EXPECT_TRUE(result.has_value());
+
+        auto array_results = std::get<protocol::Array>(result.value());
+        EXPECT_EQ(array_results.values.size(), 2);
+
+        // Extra data remains unconsumed
+        EXPECT_EQ(input, "$5\r\nextra\r\n");
+    }
+
+    TEST(ParseTest, ArrayEmptyArray) {
+        std::string_view input = "*0\r\n";
+        auto result = protocol::parse_array(input);
+        EXPECT_TRUE(result.has_value());
+
+        auto array_results = std::get<protocol::Array>(result.value());
+        EXPECT_EQ(array_results.values.size(), 0);
+        EXPECT_EQ(input, "");
+    }
+
 }

@@ -18,6 +18,7 @@ namespace gmredis::protocol {
     std::expected<RespValue, ParseError> parse_error(std::string_view &input);
     std::expected<RespValue, ParseError> parse_bulk_string(std::string_view &input);
     std::expected<RespValue, ParseError> parse_integer(std::string_view &input);
+    std::expected<RespValue, ParseError> parse_array(std::string_view &input);
 
     constexpr auto make_parser_table() {
         std::array<Parser, 128> table{};
@@ -25,6 +26,7 @@ namespace gmredis::protocol {
         table['-'] = parse_error;
         table['$'] = parse_bulk_string;
         table[':'] = parse_integer;
+        table['*'] = parse_array;
         return table;
     }
 
