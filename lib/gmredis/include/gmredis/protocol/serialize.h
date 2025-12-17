@@ -9,6 +9,7 @@ namespace gmredis::protocol {
     std::string serialize(const SimpleError& resp);
     std::string serialize(const BulkString& resp);
     std::string serialize(const Integer& resp);
+    std::string serialize(const Array& resp);
     std::string serialize(const RespValue& resp);
 
 }

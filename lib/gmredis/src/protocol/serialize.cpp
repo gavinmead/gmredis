@@ -18,6 +18,16 @@ namespace gmredis::protocol {
         return fmt::format(":{}\r\n", resp.value);
     }
 
+    std::string serialize(const Array& resp) {
+        std::string result = fmt::format("*{}\r\n", resp.values.size());
+
+        for (const auto& value : resp.values) {
+            result += serialize(value);
+        }
+
+        return result;
+    }
+
     std::string serialize(const RespValue& resp) {
         return std::visit([](const auto& value) {
             return serialize(value);
