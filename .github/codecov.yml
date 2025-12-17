@@ -1,0 +1,23 @@
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  # Header files with only declarations (no executable code)
+  - "lib/gmredis/include/gmredis/protocol/parse.h"      # constexpr table, evaluated at compile time
+  - "lib/gmredis/include/gmredis/protocol/serialize.h"  # declarations only
+  - "lib/gmredis/include/gmredis/storage/kv.h"          # abstract interface, declarations only
+  # Test files
+  - "tests/**/*"

@@ -127,3 +127,69 @@ jobs:
       - name: Run tests with ThreadSanitizer
         working-directory: build
         run: ctest --output-on-failure
+
+  coverage:
+    runs-on: ubuntu-24.04
+    environment: CI
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build python3-pip python3-venv gcc-14 g++-14 gcovr
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-14 100
+
+      - name: Install Conan
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install conan
+
+      - name: Configure Conan profile
+        run: conan profile detect --force
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ runner.os }}-gcc-14-coverage-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            conan-${{ runner.os }}-gcc-14-coverage-
+            conan-${{ runner.os }}-gcc-14-
+
+      - name: Install Conan dependencies
+        run: conan install . --output-folder=build --build=missing -s build_type=Debug
+
+      - name: Configure CMake with coverage
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+            -DCMAKE_C_COMPILER=gcc-14 \
+            -DCMAKE_CXX_COMPILER=g++-14 \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DGMREDIS_ENABLE_COVERAGE=ON \
+            -G Ninja
+
+      - name: Build
+        run: cmake --build build -j $(nproc)
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Generate coverage report
+        run: |
+          gcovr --root . --filter 'lib/gmredis/.*' --filter 'src/.*' \
+            --exclude '.*test.*' \
+            --xml --output build/coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: build/coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
