@@ -23,11 +23,23 @@ option(GMREDIS_BUILD_TESTS "Build tests" ON)
 option(GMREDIS_BUILD_SERVER "Build Redis server" ON)
 option(GMREDIS_BUILD_CLIENT "Build Redis client" ON)
 option(GMREDIS_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+option(GMREDIS_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 # Sanitizers
 if(GMREDIS_ENABLE_TSAN)
     add_compile_options(-fsanitize=thread)
     add_link_options(-fsanitize=thread)
+endif()
+
+# Code coverage
+if(GMREDIS_ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        add_compile_options(--coverage -fprofile-abs-path)
+        add_link_options(--coverage)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+        add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+        add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+    endif()
 endif()
 
 # Compiler warnings
