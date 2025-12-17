@@ -23,9 +23,10 @@ TEST_CASE("make_parser_table registers parsers correctly", "[parser]") {
         REQUIRE(table[':'] != nullptr);
     }
 
-    SECTION("Unregistered prefixes return nullptr") {
-        REQUIRE(table['*'] == nullptr);
+    SECTION("Array parser is registered at '*'") {
+        REQUIRE(table['*'] != nullptr);
     }
+
 }
 
 TEST_CASE("Parser table dispatches to correct parser", "[parser]") {
@@ -96,5 +97,38 @@ TEST_CASE("Parser table handles incomplete messages", "[parser]") {
         auto result = parser(input);
         REQUIRE_FALSE(result.has_value());
         REQUIRE(result.error() == ParseError::Incomplete);
+    }
+}
+
+SCENARIO("Parsing RESP arrays", "[parse][array]") {
+    GIVEN("a valid RESP array with two bulk strings") {
+        std::string_view input = "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n";
+
+        WHEN("parse is called") {
+            auto result = parse(input);
+
+            THEN("it returns an Array") {
+                REQUIRE(result.has_value());
+                REQUIRE(std::holds_alternative<Array>(result.value()));
+
+                AND_THEN("the array contains the expected values") {
+                    auto array = std::get<Array>(result.value());
+                    REQUIRE(array.values.size() == 2);
+                }
+            }
+        }
+    }
+
+    GIVEN("an incomplete RESP array") {
+        std::string_view input = "*2\r\n$5\r\nhello\r\n";
+
+        WHEN("parse is called") {
+            auto result = parse(input);
+
+            THEN("it returns Incomplete error") {
+                REQUIRE_FALSE(result.has_value());
+                REQUIRE(result.error() == ParseError::Incomplete);
+            }
+        }
     }
 }
