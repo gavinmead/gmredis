@@ -8,7 +8,7 @@ namespace gmredis::test {
 
     struct ValidCommandTestCase {
         const char* input;
-        command::Command expected;
+        command::CommandType expected;
         const char* description;
     };
 
@@ -32,24 +32,24 @@ namespace gmredis::test {
         ValidCommandTest,
         ::testing::Values(
             // PING variations
-            ValidCommandTestCase{"ping", command::Command::Ping, "ping_lowercase"},
-            ValidCommandTestCase{"PING", command::Command::Ping, "PING_uppercase"},
-            ValidCommandTestCase{"Ping", command::Command::Ping, "Ping_capitalized"},
-            ValidCommandTestCase{"PiNg", command::Command::Ping, "PiNg_mixed_case"},
-            ValidCommandTestCase{"pInG", command::Command::Ping, "pInG_alternating_case"},
+            ValidCommandTestCase{"ping", command::CommandType::Ping, "ping_lowercase"},
+            ValidCommandTestCase{"PING", command::CommandType::Ping, "PING_uppercase"},
+            ValidCommandTestCase{"Ping", command::CommandType::Ping, "Ping_capitalized"},
+            ValidCommandTestCase{"PiNg", command::CommandType::Ping, "PiNg_mixed_case"},
+            ValidCommandTestCase{"pInG", command::CommandType::Ping, "pInG_alternating_case"},
 
             // GET variations
-            ValidCommandTestCase{"get", command::Command::Get, "get_lowercase"},
-            ValidCommandTestCase{"GET", command::Command::Get, "GET_uppercase"},
-            ValidCommandTestCase{"Get", command::Command::Get, "Get_capitalized"},
-            ValidCommandTestCase{"GeT", command::Command::Get, "GeT_mixed_case"},
-            ValidCommandTestCase{"gEt", command::Command::Get, "gEt_alternating_case"},
+            ValidCommandTestCase{"get", command::CommandType::Get, "get_lowercase"},
+            ValidCommandTestCase{"GET", command::CommandType::Get, "GET_uppercase"},
+            ValidCommandTestCase{"Get", command::CommandType::Get, "Get_capitalized"},
+            ValidCommandTestCase{"GeT", command::CommandType::Get, "GeT_mixed_case"},
+            ValidCommandTestCase{"gEt", command::CommandType::Get, "gEt_alternating_case"},
 
             // SET variations
-            ValidCommandTestCase{"set", command::Command::Set, "set_lowercase"},
-            ValidCommandTestCase{"SET", command::Command::Set, "SET_uppercase"},
-            ValidCommandTestCase{"Set", command::Command::Set, "Set_capitalized"},
-            ValidCommandTestCase{"SeT", command::Command::Set, "SeT_mixed_case"}
+            ValidCommandTestCase{"set", command::CommandType::Set, "set_lowercase"},
+            ValidCommandTestCase{"SET", command::CommandType::Set, "SET_uppercase"},
+            ValidCommandTestCase{"Set", command::CommandType::Set, "Set_capitalized"},
+            ValidCommandTestCase{"SeT", command::CommandType::Set, "SeT_mixed_case"}
         ),
         ValidCommandTestNamer()
     );
@@ -105,8 +105,8 @@ namespace gmredis::test {
     // ========== Parameterized Test for String Type Variations ==========
 
     struct StringTypeTestCase {
-        std::function<std::optional<command::Command>()> test_func;
-        command::Command expected;
+        std::function<std::optional<command::CommandType>()> test_func;
+        command::CommandType expected;
         const char* description;
     };
 
@@ -134,7 +134,7 @@ namespace gmredis::test {
                     std::string cmd = "PING";
                     return command::get_command(cmd);
                 },
-                command::Command::Ping,
+                command::CommandType::Ping,
                 "std_string"
             },
             StringTypeTestCase{
@@ -142,7 +142,7 @@ namespace gmredis::test {
                     std::string_view cmd = "GET";
                     return command::get_command(cmd);
                 },
-                command::Command::Get,
+                command::CommandType::Get,
                 "std_string_view"
             },
             StringTypeTestCase{
@@ -150,7 +150,7 @@ namespace gmredis::test {
                     const char* cmd = "SET";
                     return command::get_command(cmd);
                 },
-                command::Command::Set,
+                command::CommandType::Set,
                 "const_char_ptr"
             },
             StringTypeTestCase{
@@ -159,7 +159,7 @@ namespace gmredis::test {
                     std::string_view cmd = std::string_view(full).substr(15, 4);
                     return command::get_command(cmd);
                 },
-                command::Command::Ping,
+                command::CommandType::Ping,
                 "substring_view"
             }
         ),

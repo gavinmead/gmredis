@@ -1,7 +1,7 @@
 #include "gmredis/command/command.h"
 
 namespace gmredis::command {
-    std::optional<Command> get_command(std::string_view command) {
+    std::optional<CommandType> get_command(std::string_view command) {
         if (command.empty()) {
             return std::nullopt;
         }
