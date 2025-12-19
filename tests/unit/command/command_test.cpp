@@ -1,251 +1,212 @@
 #include <gtest/gtest.h>
 #include "gmredis/command/command.h"
+#include <vector>
 
 namespace gmredis::test {
 
-    // Test fixture for command tests
-    class CommandTest : public ::testing::Test {
-    protected:
-        void SetUp() override {
-            // Setup code if needed
-        }
+    // ========== Parameterized Test for Valid Commands ==========
 
-        void TearDown() override {
-            // Cleanup code if needed
+    struct ValidCommandTestCase {
+        const char* input;
+        command::Command expected;
+        const char* description;
+    };
+
+    class ValidCommandTest : public ::testing::TestWithParam<ValidCommandTestCase> {};
+
+    TEST_P(ValidCommandTest, ReturnsCorrectCommand) {
+        const auto& params = GetParam();
+        auto result = command::get_command(params.input);
+        ASSERT_TRUE(result.has_value()) << "Failed for: " << params.description;
+        EXPECT_EQ(result.value(), params.expected) << "Failed for: " << params.description;
+    }
+
+    struct ValidCommandTestNamer {
+        std::string operator()(const ::testing::TestParamInfo<ValidCommandTestCase>& info) const {
+            return info.param.description;
         }
     };
 
-    // ========== Valid Command Tests ==========
+    INSTANTIATE_TEST_SUITE_P(
+        CaseInsensitiveCommands,
+        ValidCommandTest,
+        ::testing::Values(
+            // PING variations
+            ValidCommandTestCase{"ping", command::Command::Ping, "ping_lowercase"},
+            ValidCommandTestCase{"PING", command::Command::Ping, "PING_uppercase"},
+            ValidCommandTestCase{"Ping", command::Command::Ping, "Ping_capitalized"},
+            ValidCommandTestCase{"PiNg", command::Command::Ping, "PiNg_mixed_case"},
+            ValidCommandTestCase{"pInG", command::Command::Ping, "pInG_alternating_case"},
 
-    TEST_F(CommandTest, GetCommand_Ping_Lowercase) {
-        auto result = command::get_command("ping");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
+            // GET variations
+            ValidCommandTestCase{"get", command::Command::Get, "get_lowercase"},
+            ValidCommandTestCase{"GET", command::Command::Get, "GET_uppercase"},
+            ValidCommandTestCase{"Get", command::Command::Get, "Get_capitalized"},
+            ValidCommandTestCase{"GeT", command::Command::Get, "GeT_mixed_case"},
+            ValidCommandTestCase{"gEt", command::Command::Get, "gEt_alternating_case"},
+
+            // SET variations
+            ValidCommandTestCase{"set", command::Command::Set, "set_lowercase"},
+            ValidCommandTestCase{"SET", command::Command::Set, "SET_uppercase"},
+            ValidCommandTestCase{"Set", command::Command::Set, "Set_capitalized"},
+            ValidCommandTestCase{"SeT", command::Command::Set, "SeT_mixed_case"}
+        ),
+        ValidCommandTestNamer()
+    );
+
+    // ========== Parameterized Test for Invalid Commands ==========
+
+    class InvalidCommandTest : public ::testing::TestWithParam<std::string_view> {};
+
+    TEST_P(InvalidCommandTest, ReturnsNullopt) {
+        const auto& input = GetParam();
+        auto result = command::get_command(input);
+        EXPECT_FALSE(result.has_value()) << "Should return nullopt for: " << input;
     }
 
-    TEST_F(CommandTest, GetCommand_Ping_Uppercase) {
-        auto result = command::get_command("PING");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
+    INSTANTIATE_TEST_SUITE_P(
+        UnknownAndInvalidCommands,
+        InvalidCommandTest,
+        ::testing::Values(
+            // Unknown commands
+            "UNKNOWN",
+            "DEL",
+            "HSET",
+            "LPUSH",
+            "PONG",
+
+            // Empty and whitespace
+            "",
+            "\t",
+            "\n",
+            "\r",
+
+            // Commands with spaces
+            " PING",
+            "PING ",
+            "P I N G",
+
+            // Partial matches
+            "PI",
+            "GE",
+            "SE",
+
+            // Extra characters
+            "PINGS",
+            "GETX",
+            "SETX",
+
+            // Invalid characters
+            "12345",
+            "@#$%"
+        )
+    );
+
+    // ========== Parameterized Test for String Type Variations ==========
+
+    struct StringTypeTestCase {
+        std::function<std::optional<command::Command>()> test_func;
+        command::Command expected;
+        const char* description;
+    };
+
+    class StringTypeTest : public ::testing::TestWithParam<StringTypeTestCase> {};
+
+    TEST_P(StringTypeTest, HandlesVariousStringTypes) {
+        const auto& params = GetParam();
+        auto result = params.test_func();
+        ASSERT_TRUE(result.has_value()) << "Failed for: " << params.description;
+        EXPECT_EQ(result.value(), params.expected) << "Failed for: " << params.description;
     }
 
-    TEST_F(CommandTest, GetCommand_Ping_MixedCase) {
-        auto result = command::get_command("PiNg");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
-    }
+    struct StringTypeTestNamer {
+        std::string operator()(const ::testing::TestParamInfo<StringTypeTestCase>& info) const {
+            return info.param.description;
+        }
+    };
 
-    TEST_F(CommandTest, GetCommand_Ping_Capitalized) {
-        auto result = command::get_command("Ping");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
-    }
+    INSTANTIATE_TEST_SUITE_P(
+        DifferentStringTypes,
+        StringTypeTest,
+        ::testing::Values(
+            StringTypeTestCase{
+                []() {
+                    std::string cmd = "PING";
+                    return command::get_command(cmd);
+                },
+                command::Command::Ping,
+                "std_string"
+            },
+            StringTypeTestCase{
+                []() {
+                    std::string_view cmd = "GET";
+                    return command::get_command(cmd);
+                },
+                command::Command::Get,
+                "std_string_view"
+            },
+            StringTypeTestCase{
+                []() {
+                    const char* cmd = "SET";
+                    return command::get_command(cmd);
+                },
+                command::Command::Set,
+                "const_char_ptr"
+            },
+            StringTypeTestCase{
+                []() {
+                    std::string full = "The command is PING today";
+                    std::string_view cmd = std::string_view(full).substr(15, 4);
+                    return command::get_command(cmd);
+                },
+                command::Command::Ping,
+                "substring_view"
+            }
+        ),
+        StringTypeTestNamer()
+    );
 
-    TEST_F(CommandTest, GetCommand_Get_Lowercase) {
-        auto result = command::get_command("get");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Get);
-    }
+    // ========== Non-Parameterized Edge Case Tests ==========
 
-    TEST_F(CommandTest, GetCommand_Get_Uppercase) {
-        auto result = command::get_command("GET");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Get);
-    }
-
-    TEST_F(CommandTest, GetCommand_Get_MixedCase) {
-        auto result = command::get_command("GeT");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Get);
-    }
-
-    TEST_F(CommandTest, GetCommand_Set_Lowercase) {
-        auto result = command::get_command("set");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Set);
-    }
-
-    TEST_F(CommandTest, GetCommand_Set_Uppercase) {
-        auto result = command::get_command("SET");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Set);
-    }
-
-    TEST_F(CommandTest, GetCommand_Set_MixedCase) {
-        auto result = command::get_command("SeT");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Set);
-    }
-
-    // ========== Invalid Command Tests ==========
-
-    TEST_F(CommandTest, GetCommand_UnknownCommand) {
-        auto result = command::get_command("UNKNOWN");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_EmptyString) {
-        auto result = command::get_command("");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_InvalidCommand_Del) {
-        auto result = command::get_command("DEL");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_InvalidCommand_Hset) {
-        auto result = command::get_command("HSET");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_InvalidCommand_Lpush) {
-        auto result = command::get_command("LPUSH");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    // ========== Edge Case Tests ==========
-
-    TEST_F(CommandTest, GetCommand_CommandWithLeadingSpace) {
-        auto result = command::get_command(" PING");
-        EXPECT_FALSE(result.has_value()) << "Commands with leading space should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_CommandWithTrailingSpace) {
-        auto result = command::get_command("PING ");
-        EXPECT_FALSE(result.has_value()) << "Commands with trailing space should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_CommandWithSpaces) {
-        auto result = command::get_command("P I N G");
-        EXPECT_FALSE(result.has_value()) << "Commands with internal spaces should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_PartialMatch_Pi) {
-        auto result = command::get_command("PI");
-        EXPECT_FALSE(result.has_value()) << "Partial command names should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_PartialMatch_Ge) {
-        auto result = command::get_command("GE");
-        EXPECT_FALSE(result.has_value()) << "Partial command names should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_ExtraCharacters_Pings) {
-        auto result = command::get_command("PINGS");
-        EXPECT_FALSE(result.has_value()) << "Commands with extra characters should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_ExtraCharacters_Getx) {
-        auto result = command::get_command("GETX");
-        EXPECT_FALSE(result.has_value()) << "Commands with extra characters should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_SimilarCommand_Pong) {
-        auto result = command::get_command("PONG");
-        EXPECT_FALSE(result.has_value()) << "Similar but different command should not match";
-    }
-
-    TEST_F(CommandTest, GetCommand_NumbersOnly) {
-        auto result = command::get_command("12345");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_SpecialCharacters) {
-        auto result = command::get_command("@#$%");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_Tab) {
-        auto result = command::get_command("\t");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_Newline) {
-        auto result = command::get_command("\n");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    TEST_F(CommandTest, GetCommand_CarriageReturn) {
-        auto result = command::get_command("\r");
-        EXPECT_FALSE(result.has_value());
-    }
-
-    // ========== Case Sensitivity Boundary Tests ==========
-
-    TEST_F(CommandTest, GetCommand_AllUppercase_AllCommands) {
+    TEST(GetCommandTest, AllUppercaseCommandsWork) {
         EXPECT_TRUE(command::get_command("PING").has_value());
         EXPECT_TRUE(command::get_command("GET").has_value());
         EXPECT_TRUE(command::get_command("SET").has_value());
     }
 
-    TEST_F(CommandTest, GetCommand_AllLowercase_AllCommands) {
+    TEST(GetCommandTest, AllLowercaseCommandsWork) {
         EXPECT_TRUE(command::get_command("ping").has_value());
         EXPECT_TRUE(command::get_command("get").has_value());
         EXPECT_TRUE(command::get_command("set").has_value());
     }
 
-    TEST_F(CommandTest, GetCommand_AlternatingCase_Ping) {
-        auto result = command::get_command("pInG");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
+    TEST(GetCommandTest, LeadingSpaceIsRejected) {
+        auto result = command::get_command(" PING");
+        EXPECT_FALSE(result.has_value()) << "Commands with leading space should not match";
     }
 
-    TEST_F(CommandTest, GetCommand_AlternatingCase_Get) {
-        auto result = command::get_command("gEt");
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Get);
+    TEST(GetCommandTest, TrailingSpaceIsRejected) {
+        auto result = command::get_command("PING ");
+        EXPECT_FALSE(result.has_value()) << "Commands with trailing space should not match";
     }
 
-    // ========== String View Tests ==========
-
-    TEST_F(CommandTest, GetCommand_FromStdString) {
-        std::string cmd = "PING";
-        auto result = command::get_command(cmd);
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
+    TEST(GetCommandTest, InternalSpacesAreRejected) {
+        auto result = command::get_command("P I N G");
+        EXPECT_FALSE(result.has_value()) << "Commands with internal spaces should not match";
     }
 
-    TEST_F(CommandTest, GetCommand_FromStringView) {
-        std::string_view cmd = "GET";
-        auto result = command::get_command(cmd);
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Get);
+    TEST(GetCommandTest, PartialMatchesAreRejected) {
+        EXPECT_FALSE(command::get_command("PI").has_value()) << "Partial 'PI' should not match PING";
+        EXPECT_FALSE(command::get_command("GE").has_value()) << "Partial 'GE' should not match GET";
     }
 
-    TEST_F(CommandTest, GetCommand_FromCharArray) {
-        const char* cmd = "SET";
-        auto result = command::get_command(cmd);
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Set);
+    TEST(GetCommandTest, ExtraCharactersAreRejected) {
+        EXPECT_FALSE(command::get_command("PINGS").has_value()) << "'PINGS' should not match 'PING'";
+        EXPECT_FALSE(command::get_command("GETX").has_value()) << "'GETX' should not match 'GET'";
     }
 
-    TEST_F(CommandTest, GetCommand_FromSubstring) {
-        std::string full = "The command is PING today";
-        std::string_view cmd = std::string_view(full).substr(15, 4); // "PING"
-        auto result = command::get_command(cmd);
-        ASSERT_TRUE(result.has_value());
-        EXPECT_EQ(result.value(), command::Command::Ping);
-    }
-
-    // ========== Comprehensive Coverage Test ==========
-
-    TEST_F(CommandTest, GetCommand_AllValidCommandsReturnCorrectEnum) {
-        // Ensure all commands in the enum are properly mapped
-        std::vector<std::pair<std::string_view, command::Command>> test_cases = {
-            {"ping", command::Command::Ping},
-            {"PING", command::Command::Ping},
-            {"get", command::Command::Get},
-            {"GET", command::Command::Get},
-            {"set", command::Command::Set},
-            {"SET", command::Command::Set},
-        };
-
-        for (const auto& [input, expected] : test_cases) {
-            auto result = command::get_command(input);
-            ASSERT_TRUE(result.has_value()) << "Failed for input: " << input;
-            EXPECT_EQ(result.value(), expected) << "Failed for input: " << input;
-        }
+    TEST(GetCommandTest, SimilarButDifferentCommandIsRejected) {
+        EXPECT_FALSE(command::get_command("PONG").has_value()) << "'PONG' should not match 'PING'";
     }
 
 } // namespace gmredis::test

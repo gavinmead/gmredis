@@ -17,18 +17,18 @@ namespace gmredis::command {
 
     struct CaseInsensitiveHash {
         std::size_t operator()(std::string_view sv) const {
-            std::string lower(sv);
-            std::transform(lower.begin(), lower.end(), lower.begin(),
-                          [](unsigned char c) {
-                              return static_cast<char>(std::tolower(c));
-                          });
-            return std::hash<std::string>{}(lower);
+            std::size_t hash = 0;
+            for (char c : sv) {
+                hash = hash * 31 + static_cast<std::size_t>(std::tolower(static_cast<unsigned char>(c)));
+            }
+            return hash;
 
         }
     };
 
     struct CaseInsensitiveEqual {
         bool operator()(std::string_view a, std::string_view b) const {
+            if (a.size() != b.size()) return false;
             return std::equal(a.begin(), a.end(), b.begin(), b.end(),
                              [](char a, char b) {
                                  return std::tolower(static_cast<unsigned char>(a)) ==
@@ -39,7 +39,7 @@ namespace gmredis::command {
 
 
     inline auto make_command_table() {
-        std::unordered_map<std::string, Command, CaseInsensitiveHash, CaseInsensitiveEqual> command_map = {
+        std::unordered_map<std::string_view, Command, CaseInsensitiveHash, CaseInsensitiveEqual> command_map = {
             {"ping", Command::Ping},
             {"set", Command::Set},
             {"get", Command::Get}
