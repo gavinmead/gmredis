@@ -5,11 +5,13 @@
 #include <optional>
 #include <algorithm>
 #include <cctype>
+#include <expected>
+#include "gmredis/protocol/resp_v3.h"
 
 
 namespace gmredis::command {
 
-    enum class Command {
+    enum class CommandType {
         Ping,
         Get,
         Set
@@ -39,10 +41,10 @@ namespace gmredis::command {
 
 
     inline auto make_command_table() {
-        std::unordered_map<std::string_view, Command, CaseInsensitiveHash, CaseInsensitiveEqual> command_map = {
-            {"ping", Command::Ping},
-            {"set", Command::Set},
-            {"get", Command::Get}
+        std::unordered_map<std::string_view, CommandType, CaseInsensitiveHash, CaseInsensitiveEqual> command_map = {
+            {"ping", CommandType::Ping},
+            {"set", CommandType::Set},
+            {"get", CommandType::Get}
         };
 
         return command_map;
@@ -50,6 +52,28 @@ namespace gmredis::command {
 
     inline const auto command_table = make_command_table();
 
-    std::optional<Command> get_command(std::string_view command);
+    std::optional<CommandType> get_command(std::string_view command);
 
+    enum class CommandErrorCode {
+        InvalidArgument,
+        WrongArgumentCount,
+        KeyNotFound,
+        ExecutionFailed,
+        UnknownError,
+    };
+
+    struct CommandError {
+        CommandErrorCode code;
+        std::string message;
+
+        CommandError(CommandErrorCode c, std::string msg)
+            : code(c), message(std::move(msg)) {}
+    };
+
+    class Command {
+    public:
+        virtual ~Command() = default;
+        virtual std::expected<protocol::RespValue, CommandError> validate(const protocol::RespValue&) = 0;
+        virtual std::expected<protocol::RespValue, CommandError> execute(const protocol::RespValue&) = 0;
+    };
 }
