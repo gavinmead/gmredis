@@ -48,6 +48,8 @@ jobs:
             - Test coverage
 
             Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+            
+            Only review the changes in this pull request. Do not comment on unrelated parts of the codebase.
 
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
 

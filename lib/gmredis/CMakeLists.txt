@@ -5,6 +5,7 @@ add_library(gmredis_lib
         src/protocol/serialize.cpp
         src/protocol/parse.cpp
         src/command/command.cpp
+        src/command/base_command.cpp
 )
 
 add_library(gmredis::lib ALIAS gmredis_lib)
