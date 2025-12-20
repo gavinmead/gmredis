@@ -1,6 +1,8 @@
 #include "command_selector_impl.h"
 
 namespace gmredis::command {
+    constexpr size_t COMMAND_INDEX = 0;
+
     std::expected<std::shared_ptr<Command>, CommandError> DefaultCommandSelector::select(const protocol::Array& req) {
         if (req.values.size() == 0) {
             return std::unexpected(CommandError(CommandErrorCode::WrongArgumentCount, "Cannot select an empty array."));

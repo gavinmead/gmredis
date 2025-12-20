@@ -6,8 +6,6 @@
 
 namespace gmredis::command {
 
-    constexpr size_t COMMAND_INDEX = 0;
-
     /**
      * @brief Default implementation of CommandSelector using a CommandRegistry for command lookup.
      *
