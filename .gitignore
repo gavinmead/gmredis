@@ -74,3 +74,5 @@ lcov.info
 
 # Testing artifacts
 Testing/
+build-cov/
+.run/
