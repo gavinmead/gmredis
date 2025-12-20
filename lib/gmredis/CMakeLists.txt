@@ -7,6 +7,7 @@ add_library(gmredis_lib
         src/command/command.cpp
         src/command/base_command.cpp
         src/command/command_registry.cpp
+        src/command/ping.cpp
 )
 
 add_library(gmredis::lib ALIAS gmredis_lib)
