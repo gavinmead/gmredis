@@ -59,6 +59,7 @@ namespace gmredis::command {
         KeyNotFound,
         ExecutionFailed,
         UnknownError,
+        CommandNotFound,
     };
 
     struct CommandError {

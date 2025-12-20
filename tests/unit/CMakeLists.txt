@@ -8,6 +8,7 @@ add_executable(gmredis_unit_tests
     command/base_command_test.cpp
     command/command_registry_test.cpp
     command/ping_test.cpp
+    command/command_selector_test.cpp
 )
 
 target_link_libraries(gmredis_unit_tests
@@ -15,6 +16,7 @@ target_link_libraries(gmredis_unit_tests
         gmredis::lib
         GTest::gtest
         GTest::gtest_main
+        GTest::gmock
         gmredis_warnings
 )
 
