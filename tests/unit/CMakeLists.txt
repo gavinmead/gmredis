@@ -6,6 +6,7 @@ add_executable(gmredis_unit_tests
     protocol/parse_test.cpp
     command/command_test.cpp
     command/base_command_test.cpp
+    command/command_registry_test.cpp
 )
 
 target_link_libraries(gmredis_unit_tests
