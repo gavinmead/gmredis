@@ -5,8 +5,6 @@
 #include <expected>
 #include <memory>
 
-#include "command_registry.h"
-
 namespace gmredis::command {
     /**
      * @brief Interface for selecting and instantiating Redis commands based on RESP protocol requests.
