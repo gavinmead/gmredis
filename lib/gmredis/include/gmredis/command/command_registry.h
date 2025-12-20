@@ -14,7 +14,9 @@ namespace gmredis::command {
         /** Attempted to register a command type that is already registered */
         AlreadyRegistered,
         /** Attempted to retrieve a command type that is not registered */
-        CommandNotFound
+        CommandNotFound,
+        /** If null is passed in when registering a command*/
+        NullCommand,
     };
 
     /**
@@ -88,6 +90,6 @@ namespace gmredis::command {
              * @note The returned shared_ptr allows multiple callers to safely hold
              *       references to the same command
              */
-            virtual std::expected<std::shared_ptr<Command>, CommandRegistryError> getCommand(CommandType) noexcept = 0;
+            virtual std::expected<std::shared_ptr<Command>, CommandRegistryError> getCommand(CommandType) const noexcept = 0;
     };
 }

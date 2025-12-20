@@ -26,6 +26,14 @@ namespace gmredis::test {
         ASSERT_EQ(returnedCmd.value(), cmd);
     }
 
+    TEST(CommandRegistryTest, NullCommandRegistration) {
+        auto registry = command::DefaultCommandRegistry();
+        auto result = registry.registerCommand(command::CommandType::Ping, nullptr);
+
+        ASSERT_TRUE(result.has_value());
+        ASSERT_EQ(result.value(), command::CommandRegistryError::NullCommand);
+    }
+
     TEST(CommandRegistryTest, AlreadyRegistered) {
         auto registry = command::DefaultCommandRegistry();
         auto cmd = std::make_shared<TestCommand>();
@@ -44,6 +52,24 @@ namespace gmredis::test {
         auto result = registry.getCommand(command::CommandType::Ping);
         ASSERT_FALSE(result.has_value());
         ASSERT_EQ(result.error(), command::CommandRegistryError::CommandNotFound);
-
     }
+
+    TEST(CommandRegistryTest, MultiRegistrationAndGet) {
+        auto registry = command::DefaultCommandRegistry();
+        auto cmd1 = std::make_shared<TestCommand>();
+        auto cmd2 = std::make_shared<TestCommand>();
+
+        auto result = registry.registerCommand(command::CommandType::Ping, cmd1);
+        ASSERT_FALSE(result.has_value());
+
+        result = registry.registerCommand(command::CommandType::Get, cmd2);
+        ASSERT_FALSE(result.has_value());
+
+        auto returnedCmd1 = registry.getCommand(command::CommandType::Ping);
+        auto returnedCmd2 = registry.getCommand(command::CommandType::Get);
+
+        ASSERT_EQ(returnedCmd1.value(), cmd1);
+        ASSERT_EQ(returnedCmd2.value(), cmd2);
+    }
+
 }
