@@ -22,7 +22,7 @@ namespace gmredis::command {
 
         auto cmd = command_registry->getCommand(commandType.value());
         if (!cmd.has_value()) {
-            return std::unexpected(CommandError(CommandErrorCode::CommandNotFound, "command text is not valid"));
+            return std::unexpected(CommandError(CommandErrorCode::CommandNotFound, "command not registered in command registry"));
         }
 
         return cmd.value();
