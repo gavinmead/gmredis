@@ -32,7 +32,7 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("PING"));
+        req.values.push_back(protocol::BulkString{.value = "PING", .length = 4});
 
         auto result = selector.select(req);
         ASSERT_TRUE(result.has_value());
@@ -49,7 +49,7 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("ping"));
+        req.values.push_back(protocol::BulkString{.value = "ping", .length = 4});
 
         auto result = selector.select(req);
         ASSERT_TRUE(result.has_value());
@@ -66,8 +66,8 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("GET"));
-        req.values.push_back(protocol::BulkString("key1"));
+        req.values.push_back(protocol::BulkString{.value = "GET", .length = 3});
+        req.values.push_back(protocol::BulkString{.value = "key1", .length = 4});
 
         auto result = selector.select(req);
         ASSERT_TRUE(result.has_value());
@@ -102,7 +102,7 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("SET"));
+        req.values.push_back(protocol::BulkString{.value = "SET", .length = 3});
         req.values.push_back(protocol::Integer(123));  // Should be BulkString
 
         auto result = selector.select(req);
@@ -115,7 +115,7 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("UNKNOWN"));
+        req.values.push_back(protocol::BulkString{.value = "UNKNOWN", .length = 7});
 
         auto result = selector.select(req);
         ASSERT_FALSE(result.has_value());
@@ -131,7 +131,7 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("PING"));
+        req.values.push_back(protocol::BulkString{.value = "PING", .length = 4});
 
         auto result = selector.select(req);
         ASSERT_FALSE(result.has_value());
@@ -154,7 +154,7 @@ namespace gmredis::test {
 
         for (const auto& variation : variations) {
             protocol::Array req;
-            req.values.push_back(protocol::BulkString(variation));
+            req.values.push_back(protocol::BulkString{.value = variation, .length = 4});
             auto result = selector.select(req);
             ASSERT_TRUE(result.has_value()) << "Failed for variation: " << variation;
             ASSERT_EQ(result.value(), mockCmd);
@@ -171,11 +171,11 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("SET"));
-        req.values.push_back(protocol::BulkString("mykey"));
-        req.values.push_back(protocol::BulkString("myvalue"));
-        req.values.push_back(protocol::BulkString("EX"));
-        req.values.push_back(protocol::BulkString("3600"));
+        req.values.push_back(protocol::BulkString{.value = "SET", .length = 3});
+        req.values.push_back(protocol::BulkString{.value = "mykey", .length = 5});
+        req.values.push_back(protocol::BulkString{.value = "myvalue", .length = 7});
+        req.values.push_back(protocol::BulkString{.value = "EX", .length = 2});
+        req.values.push_back(protocol::BulkString{.value = "3600", .length = 4});
 
         auto result = selector.select(req);
         ASSERT_TRUE(result.has_value());
@@ -199,24 +199,24 @@ namespace gmredis::test {
 
         // Test PING
         protocol::Array pingReq;
-        pingReq.values.push_back(protocol::BulkString("PING"));
+        pingReq.values.push_back(protocol::BulkString{.value = "PING", .length = 4});
         auto pingResult = selector.select(pingReq);
         ASSERT_TRUE(pingResult.has_value());
         ASSERT_EQ(pingResult.value(), pingCmd);
 
         // Test GET
         protocol::Array getReq;
-        getReq.values.push_back(protocol::BulkString("GET"));
-        getReq.values.push_back(protocol::BulkString("key"));
+        getReq.values.push_back(protocol::BulkString{.value = "GET", .length = 3});
+        getReq.values.push_back(protocol::BulkString{.value = "key", .length = 3});
         auto getResult = selector.select(getReq);
         ASSERT_TRUE(getResult.has_value());
         ASSERT_EQ(getResult.value(), getCmd);
 
         // Test SET
         protocol::Array setReq;
-        setReq.values.push_back(protocol::BulkString("SET"));
-        setReq.values.push_back(protocol::BulkString("key"));
-        setReq.values.push_back(protocol::BulkString("value"));
+        setReq.values.push_back(protocol::BulkString{.value = "SET", .length = 3});
+        setReq.values.push_back(protocol::BulkString{.value = "key", .length = 3});
+        setReq.values.push_back(protocol::BulkString{.value = "value", .length = 5});
         auto setResult = selector.select(setReq);
         ASSERT_TRUE(setResult.has_value());
         ASSERT_EQ(setResult.value(), setCmd);
@@ -228,8 +228,8 @@ namespace gmredis::test {
 
         // Test with Integer in arguments
         protocol::Array req1;
-        req1.values.push_back(protocol::BulkString("SET"));
-        req1.values.push_back(protocol::BulkString("key"));
+        req1.values.push_back(protocol::BulkString{.value = "SET", .length = 3});
+        req1.values.push_back(protocol::BulkString{.value = "key", .length = 3});
         req1.values.push_back(protocol::Integer(42));
         auto result1 = selector.select(req1);
         ASSERT_FALSE(result1.has_value());
@@ -237,7 +237,7 @@ namespace gmredis::test {
 
         // Test with SimpleString in arguments
         protocol::Array req2;
-        req2.values.push_back(protocol::BulkString("GET"));
+        req2.values.push_back(protocol::BulkString{.value = "GET", .length = 3});
         req2.values.push_back(protocol::SimpleString("key"));
         auto result2 = selector.select(req2);
         ASSERT_FALSE(result2.has_value());
@@ -245,7 +245,7 @@ namespace gmredis::test {
 
         // Test with Array in arguments
         protocol::Array req3;
-        req3.values.push_back(protocol::BulkString("SET"));
+        req3.values.push_back(protocol::BulkString{.value = "SET", .length = 3});
         protocol::Array nestedArray;
         req3.values.push_back(nestedArray);
         auto result3 = selector.select(req3);
@@ -263,9 +263,9 @@ namespace gmredis::test {
         auto selector = command::DefaultCommandSelector(std::move(mockRegistry));
 
         protocol::Array req;
-        req.values.push_back(protocol::BulkString("SET"));
-        req.values.push_back(protocol::BulkString("key"));
-        req.values.push_back(protocol::BulkString("value"));
+        req.values.push_back(protocol::BulkString{.value = "SET", .length = 3});
+        req.values.push_back(protocol::BulkString{.value = "key", .length = 3});
+        req.values.push_back(protocol::BulkString{.value = "value", .length = 5});
 
         auto result = selector.select(req);
         ASSERT_TRUE(result.has_value());
