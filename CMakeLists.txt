@@ -29,8 +29,9 @@ option(GMREDIS_ENABLE_COVERAGE "Enable code coverage" OFF)
 if(GMREDIS_ENABLE_TSAN)
     add_compile_options(-fsanitize=thread)
     add_link_options(-fsanitize=thread)
-    # ASIO compatibility: disable std::atomic_thread_fence which is not supported by TSAN
-    add_compile_definitions(ASIO_DISABLE_STD_FENCED_BLOCK)
+    # ASIO uses atomic_thread_fence which triggers TSAN warnings
+    # Disable the error but TSAN will still catch threading issues in our code
+    add_compile_options(-Wno-error=tsan)
 endif()
 
 # Code coverage
