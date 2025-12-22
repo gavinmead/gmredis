@@ -24,6 +24,7 @@ target_link_libraries(gmredis_lib
         gmredis_warnings
     PUBLIC
         spdlog::spdlog
+        asio::asio
         Threads::Threads
 )
 

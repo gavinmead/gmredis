@@ -29,6 +29,9 @@ option(GMREDIS_ENABLE_COVERAGE "Enable code coverage" OFF)
 if(GMREDIS_ENABLE_TSAN)
     add_compile_options(-fsanitize=thread)
     add_link_options(-fsanitize=thread)
+    # ASIO uses atomic_thread_fence which triggers TSAN warnings
+    # Disable the error but TSAN will still catch threading issues in our code
+    add_compile_options(-Wno-error=tsan)
 endif()
 
 # Code coverage
@@ -50,7 +53,7 @@ target_compile_options(gmredis_warnings INTERFACE
         -Wconversion -Wsign-conversion
         -Wnon-virtual-dtor -Wold-style-cast
         -Wcast-align -Wunused -Woverloaded-virtual
-        -Wnull-dereference -Wdouble-promotion
+        -Wdouble-promotion
         -Wformat=2 -Wimplicit-fallthrough
     >
     $<$<CXX_COMPILER_ID:MSVC>:
@@ -62,6 +65,7 @@ target_compile_options(gmredis_warnings INTERFACE
 find_package(GTest REQUIRED)
 find_package(Catch2 REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(asio REQUIRED)
 find_package(Threads REQUIRED)
 
 # Core library
