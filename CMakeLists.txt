@@ -50,7 +50,7 @@ target_compile_options(gmredis_warnings INTERFACE
         -Wconversion -Wsign-conversion
         -Wnon-virtual-dtor -Wold-style-cast
         -Wcast-align -Wunused -Woverloaded-virtual
-        -Wnull-dereference -Wdouble-promotion
+        -Wdouble-promotion
         -Wformat=2 -Wimplicit-fallthrough
     >
     $<$<CXX_COMPILER_ID:MSVC>:
