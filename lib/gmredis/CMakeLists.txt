@@ -24,8 +24,13 @@ target_link_libraries(gmredis_lib
         gmredis_warnings
     PUBLIC
         spdlog::spdlog
-        asio::asio
         Threads::Threads
+)
+
+# Link asio as a SYSTEM library to suppress warnings from its headers
+target_link_libraries(gmredis_lib
+    SYSTEM PUBLIC
+        asio::asio
 )
 
 # Set library properties
