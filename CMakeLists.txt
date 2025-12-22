@@ -62,6 +62,7 @@ target_compile_options(gmredis_warnings INTERFACE
 find_package(GTest REQUIRED)
 find_package(Catch2 REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(asio REQUIRED)
 find_package(Threads REQUIRED)
 
 # Core library
