@@ -9,6 +9,7 @@ add_executable(gmredis_unit_tests
     command/command_registry_test.cpp
     command/ping_test.cpp
     command/command_selector_test.cpp
+    config/config_test.cpp
 )
 
 target_link_libraries(gmredis_unit_tests
